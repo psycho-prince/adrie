@@ -4,68 +4,85 @@ Configuration and fixtures for pytest.
 
 import pytest
 from httpx import AsyncClient
-from app.api.main import app as fastapi_app
-from app.environment.engine import EnvironmentEngine
-from app.risk.model import RiskModel
-from app.agents.engine import AgentCoordinationEngine
-from app.planner.engine import PlanningEngine
-from app.prioritization.model import VictimPrioritizationModel
-from app.explainability.service import ExplainabilityService
-from app.metrics.engine import MetricsEngine
-from app.api.main import adrie_instances # Import global state for testing
-from uuid import uuid4
+from adrie.main import app as fastapi_app
+from adrie.services.environment_service import EnvironmentService
+from adrie.services.risk_service import RiskService
+from adrie.services.agent_service import AgentService
+from adrie.services.planner_service import PlannerService
+from adrie.services.prioritization_service import PrioritizationService
+from adrie.services.explainability_service import ExplainabilityService
+from adrie.services.metrics_service import MetricsService
+from adrie.services.mission_service import MissionService
+from adrie.services.metrics_service import MetricsService
+from adrie.infrastructure.mission_registry import mission_registry
+from uuid import uuid4, UUID
+from typing import Generator, AsyncGenerator, Tuple
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 
 @pytest.fixture(name="test_app")
-async def test_app_fixture():
+async def test_app_fixture() -> AsyncGenerator[AsyncClient, None]:
     """Fixture for FastAPI TestClient."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as client:
         yield client
 
+@pytest.fixture(name="executor_fixture")
+def executor_fixture() -> Generator[ThreadPoolExecutor, None, None]:
+    """Fixture for a ThreadPoolExecutor instance."""
+    executor = ThreadPoolExecutor(max_workers=1) # Use a small number of workers for testing
+    yield executor
+    executor.shutdown(wait=True)
+
 @pytest.fixture(autouse=True)
-def clear_adrie_instances():
-    """Clears adrie_instances before each test to ensure isolation."""
-    adrie_instances.clear()
+async def clear_mission_registry() -> AsyncGenerator[None, None]:
+    """Clears mission_registry before and after each test to ensure isolation."""
+    await mission_registry.clear()
     yield
-    adrie_instances.clear()
+    await mission_registry.clear()
 
 @pytest.fixture(name="mock_mission_id")
-def mock_mission_id_fixture():
+def mock_mission_id_fixture() -> UUID:
     """Fixture for a consistent mock mission ID."""
     return uuid4()
 
 @pytest.fixture(name="environment_engine")
-def environment_engine_fixture(mock_mission_id):
-    """Fixture for a fresh EnvironmentEngine instance."""
-    return EnvironmentEngine(mission_id=mock_mission_id)
+def environment_engine_fixture(mock_mission_id: UUID, executor_fixture: ThreadPoolExecutor) -> EnvironmentService:
+    """Fixture for a fresh EnvironmentService instance with injected executor."""
+    return EnvironmentService(mission_id=mock_mission_id, executor=executor_fixture)
 
 @pytest.fixture(name="risk_model")
-def risk_model_fixture(environment_engine):
-    """Fixture for a fresh RiskModel instance."""
-    return RiskModel(environment_engine=environment_engine)
+def risk_model_fixture(environment_engine: EnvironmentService, executor_fixture: ThreadPoolExecutor) -> RiskService:
+    """Fixture for a fresh RiskService instance with injected executor."""
+    return RiskService(environment_service=environment_engine, executor=executor_fixture)
 
-@pytest.fixture(name="agent_coordination_engine")
-def agent_coordination_engine_fixture(environment_engine):
-    """Fixture for a fresh AgentCoordinationEngine instance."""
-    return AgentCoordinationEngine(environment_engine=environment_engine)
+@pytest.fixture(name="agent_service")
+def agent_service_fixture(environment_engine: EnvironmentService, executor_fixture: ThreadPoolExecutor) -> AgentService:
+    """Fixture for a fresh AgentService instance with injected executor."""
+    return AgentService(environment_engine=environment_engine, executor=executor_fixture)
 
-@pytest.fixture(name="planning_engine")
-def planning_engine_fixture(environment_engine, risk_model):
-    """Fixture for a fresh PlanningEngine instance."""
-    return PlanningEngine(environment_engine=environment_engine, risk_model=risk_model)
+@pytest.fixture(name="planner_service")
+def planner_service_fixture(environment_engine: EnvironmentService, risk_model: RiskService, executor_fixture: ThreadPoolExecutor) -> PlannerService:
+    """Fixture for a fresh PlannerService instance with injected executor."""
+    return PlannerService(environment_service=environment_engine, risk_service=risk_model, executor=executor_fixture)
 
-@pytest.fixture(name="victim_prioritization_model")
-def victim_prioritization_model_fixture(environment_engine, risk_model):
-    """Fixture for a fresh VictimPrioritizationModel instance."""
-    return VictimPrioritizationModel(environment_engine=environment_engine, risk_model=risk_model)
+@pytest.fixture(name="prioritization_service")
+def prioritization_service_fixture(environment_engine: EnvironmentService, risk_model: RiskService, executor_fixture: ThreadPoolExecutor) -> PrioritizationService:
+    """Fixture for a fresh PrioritizationService instance with injected executor."""
+    return PrioritizationService(environment_service=environment_engine, risk_service=risk_model, executor=executor_fixture)
 
 @pytest.fixture(name="explainability_service")
-def explainability_service_fixture():
+def explainability_service_fixture() -> ExplainabilityService:
     """Fixture for a fresh ExplainabilityService instance."""
     return ExplainabilityService()
 
 @pytest.fixture(name="metrics_engine")
-def metrics_engine_fixture(mock_mission_id):
-    """Fixture for a fresh MetricsEngine instance."""
-    return MetricsEngine(mission_id=mock_mission_id)
+def metrics_engine_fixture(mock_mission_id: UUID) -> MetricsService:
+    """Fixture for a fresh MetricsService instance."""
+    return MetricsService(mission_id=mock_mission_id)
+
+@pytest.fixture(name="mission_service")
+def mission_service_fixture(executor_fixture: ThreadPoolExecutor) -> MissionService:
+    """Fixture for a fresh MissionService instance with injected executor."""
+    return MissionService(executor=executor_fixture)
 
 # Add fixtures for other components as they are developed

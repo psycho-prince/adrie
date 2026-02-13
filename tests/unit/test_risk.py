@@ -3,22 +3,23 @@ Unit tests for the RiskModel module.
 """
 
 import pytest
-from app.environment.engine import EnvironmentEngine
-from app.risk.model import RiskModel
-from app.core.models import SimulateRequest, Coordinate, HazardType, NodeRisk, RiskLevel
+from adrie.services.environment_service import EnvironmentService
+from adrie.services.risk_service import RiskService
+from adrie.models.models import SimulateRequest, Coordinate, Hazard, HazardType, NodeRisk, RiskLevel
+from uuid import uuid4
 
 @pytest.mark.asyncio
-async def test_risk_model_initialization(risk_model: RiskModel):
+async def test_risk_model_initialization(risk_model: RiskService) -> None:
     """Test if the RiskModel initializes correctly with hazard weights."""
     assert risk_model.hazard_weights is not None
     assert HazardType.FIRE in risk_model.hazard_weights
     assert risk_model.env is not None
 
 @pytest.mark.asyncio
-async def test_recalculate_risk_map_no_hazards(environment_engine: EnvironmentEngine, risk_model: RiskModel):
+async def test_recalculate_risk_map_no_hazards(environment_engine: EnvironmentService, risk_model: RiskService) -> None:
     """Test risk map calculation when there are no hazards."""
-    request = SimulateRequest(map_size=5, hazard_intensity_factor=0.0, num_victims=0, num_agents=0)
-    environment_engine.initialize_environment(request)
+    request = SimulateRequest(map_size=5, hazard_intensity_factor=0.0, num_victims=0, num_agents=0, seed=None)
+    await environment_engine.initialize_environment(request)
     
     risk_map = await risk_model.recalculate_risk_map()
     
@@ -29,15 +30,15 @@ async def test_recalculate_risk_map_no_hazards(environment_engine: EnvironmentEn
         assert node_risk.dominant_hazard is None
 
 @pytest.mark.asyncio
-async def test_recalculate_risk_map_with_hazards(environment_engine: EnvironmentEngine, risk_model: RiskModel):
+async def test_recalculate_risk_map_with_hazards(environment_engine: EnvironmentService, risk_model: RiskService) -> None:
     """Test risk map calculation with some hazards."""
     request = SimulateRequest(map_size=10, hazard_intensity_factor=0.5, num_victims=0, num_agents=0, seed=42)
-    environment_engine.initialize_environment(request)
+    await environment_engine.initialize_environment(request)
     
     # Manually add a specific hazard for predictable testing
     hazard_coord = Coordinate(x=5, y=5)
-    fire_hazard = environment_engine.Hazard(
-        id=environment_engine.uuid4(),
+    fire_hazard = Hazard(
+        id=uuid4(),
         type=HazardType.FIRE,
         location=hazard_coord,
         intensity=0.8,
@@ -70,10 +71,10 @@ async def test_recalculate_risk_map_with_hazards(environment_engine: Environment
     assert any(node.risk_level != RiskLevel.LOW for node in risk_map.values())
 
 @pytest.mark.asyncio
-async def test_get_risk_at_coordinate(environment_engine: EnvironmentEngine, risk_model: RiskModel):
+async def test_get_risk_at_coordinate(environment_engine: EnvironmentService, risk_model: RiskService) -> None:
     """Test retrieving risk for a specific coordinate."""
     request = SimulateRequest(map_size=5, hazard_intensity_factor=0.7, num_victims=0, num_agents=0, seed=1)
-    environment_engine.initialize_environment(request)
+    await environment_engine.initialize_environment(request)
     await risk_model.recalculate_risk_map()
 
     coord_with_risk = Coordinate(x=2, y=2)
@@ -85,10 +86,10 @@ async def test_get_risk_at_coordinate(environment_engine: EnvironmentEngine, ris
     assert risk_model.get_risk_at_coordinate(non_existent_coord) is None
 
 @pytest.mark.asyncio
-async def test_probabilistic_collapse_model(environment_engine: EnvironmentEngine, risk_model: RiskModel):
+async def test_probabilistic_collapse_model(environment_engine: EnvironmentService, risk_model: RiskService) -> None:
     """Test the probabilistic collapse model (stub)."""
     request = SimulateRequest(map_size=5, hazard_intensity_factor=0.7, num_victims=0, num_agents=0, seed=1)
-    environment_engine.initialize_environment(request)
+    await environment_engine.initialize_environment(request)
     await risk_model.recalculate_risk_map() # Ensure risk map is populated
 
     # Test a coordinate that likely has low risk

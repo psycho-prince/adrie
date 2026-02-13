@@ -4,14 +4,14 @@ Unit tests for the EnvironmentEngine module.
 
 import pytest
 from uuid import UUID
-from app.environment.engine import EnvironmentEngine
-from app.core.models import SimulateRequest, Coordinate, HazardType, VictimStatus, InjurySeverity
+from adrie.services.environment_service import EnvironmentService
+from adrie.models.models import SimulateRequest, Coordinate, HazardType, VictimStatus, InjurySeverity
 
 @pytest.mark.asyncio
-async def test_environment_initialization(environment_engine: EnvironmentEngine):
+async def test_environment_initialization(environment_engine: EnvironmentService) -> None:
     """Test if the environment initializes correctly."""
     request = SimulateRequest(map_size=10, hazard_intensity_factor=0.5, num_victims=5, num_agents=2, seed=42)
-    environment_engine.initialize_environment(request)
+    await environment_engine.initialize_environment(request)
 
     assert environment_engine.grid_size == 10
     assert len(environment_engine.grid) == 100 # 10x10 grid
@@ -20,12 +20,13 @@ async def test_environment_initialization(environment_engine: EnvironmentEngine)
     assert environment_engine._initialized is True
 
     with pytest.raises(RuntimeError, match="Environment already initialized"):
-        environment_engine.initialize_environment(request) # Should not allow re-initialization
+        await environment_engine.initialize_environment(request) # Should not allow re-initialization
 
-def test_get_grid_node(environment_engine: EnvironmentEngine):
+@pytest.mark.asyncio
+async def test_get_grid_node(environment_engine: EnvironmentService) -> None:
     """Test retrieving a specific grid node."""
-    request = SimulateRequest(map_size=5, num_victims=1, num_agents=1)
-    environment_engine.initialize_environment(request)
+    request = SimulateRequest(map_size=5, hazard_intensity_factor=0.5, num_victims=1, num_agents=1, seed=None)
+    await environment_engine.initialize_environment(request)
 
     coord = Coordinate(x=2, y=2)
     node = environment_engine.get_grid_node(coord)
@@ -36,10 +37,11 @@ def test_get_grid_node(environment_engine: EnvironmentEngine):
     non_existent_coord = Coordinate(x=100, y=100)
     assert environment_engine.get_grid_node(non_existent_coord) is None
 
-def test_update_hazard_intensity(environment_engine: EnvironmentEngine):
+@pytest.mark.asyncio
+async def test_update_hazard_intensity(environment_engine: EnvironmentService) -> None:
     """Test updating a hazard's intensity."""
     request = SimulateRequest(map_size=5, hazard_intensity_factor=1.0, num_victims=0, num_agents=0, seed=1)
-    environment_engine.initialize_environment(request)
+    await environment_engine.initialize_environment(request)
 
     initial_hazards = environment_engine.get_all_hazards()
     assert len(initial_hazards) > 0
@@ -55,10 +57,11 @@ def test_update_hazard_intensity(environment_engine: EnvironmentEngine):
     non_existent_hazard_id = UUID('00000000-0000-0000-0000-000000000000')
     assert environment_engine.update_hazard_intensity(non_existent_hazard_id, 0.5) is None
 
-def test_update_victim_status(environment_engine: EnvironmentEngine):
+@pytest.mark.asyncio
+async def test_update_victim_status(environment_engine: EnvironmentService) -> None:
     """Test updating a victim's status."""
-    request = SimulateRequest(map_size=5, num_victims=1, num_agents=0, seed=1)
-    environment_engine.initialize_environment(request)
+    request = SimulateRequest(map_size=5, hazard_intensity_factor=0.5, num_victims=1, num_agents=0, seed=1)
+    await environment_engine.initialize_environment(request)
 
     initial_victims = environment_engine.get_all_victims()
     assert len(initial_victims) == 1
@@ -77,10 +80,11 @@ def test_update_victim_status(environment_engine: EnvironmentEngine):
     non_existent_victim_id = UUID('00000000-0000-0000-0000-000000000000')
     assert environment_engine.update_victim_status(non_existent_victim_id, VictimStatus.SAFE) is None
 
-def test_get_neighbors(environment_engine: EnvironmentEngine):
+@pytest.mark.asyncio
+async def test_get_neighbors(environment_engine: EnvironmentService) -> None:
     """Test getting valid neighbors for a coordinate."""
-    request = SimulateRequest(map_size=3, num_victims=0, num_agents=0)
-    environment_engine.initialize_environment(request)
+    request = SimulateRequest(map_size=3, hazard_intensity_factor=0.5, num_victims=0, num_agents=0, seed=None)
+    await environment_engine.initialize_environment(request)
 
     # Center coordinate (1,1)
     center_coord = Coordinate(x=1, y=1)
@@ -106,10 +110,11 @@ def test_get_neighbors(environment_engine: EnvironmentEngine):
     assert Coordinate(x=0, y=2) in neighbors
     assert Coordinate(x=1, y=1) in neighbors
 
-def test_reset_environment(environment_engine: EnvironmentEngine):
+@pytest.mark.asyncio
+async def test_reset_environment(environment_engine: EnvironmentService) -> None:
     """Test resetting the environment."""
-    request = SimulateRequest(map_size=10, num_victims=5, num_agents=2, seed=42)
-    environment_engine.initialize_environment(request)
+    request = SimulateRequest(map_size=10, hazard_intensity_factor=0.5, num_victims=5, num_agents=2, seed=42)
+    await environment_engine.initialize_environment(request)
 
     assert environment_engine.grid_size == 10
     assert environment_engine._initialized is True
@@ -120,5 +125,4 @@ def test_reset_environment(environment_engine: EnvironmentEngine):
     assert not environment_engine.hazards
     assert not environment_engine.victims
     assert environment_engine._initialized is False
-    # mission_id should be new after reset
-    assert isinstance(environment_engine.mission_id, UUID)
+

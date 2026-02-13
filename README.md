@@ -31,56 +31,95 @@ ADRIE aims to:
 - Track performance metrics and business KPIs to assess operational efficiency and impact.
 
 ## 3. Architecture Overview
-ADRIE is built with a clean, modular, and scalable architecture, adhering to Clean Architecture and SOLID principles. It's designed as a deployable AI platform using Python 3.11+, FastAPI backend, Pydantic models, and an asynchronous architecture where appropriate.
+ADRIE is built with a clean, modular, and scalable architecture, adhering to Clean Architecture and SOLID principles. It's designed as a deployable AI platform using Python 3.11+, FastAPI backend, Pydantic v2 models, and an asynchronous architecture where appropriate.
 
 **Project Structure:**
 ```
 adrie/
-├── app/                  # Core application logic
-│   ├── core/             # Shared models, utilities, and common interfaces
-│   ├── environment/      # Disaster environment simulation and hazard modeling
-│   ├── risk/             # Risk assessment and propagation
-│   ├── agents/           # Rescue agent definitions and behaviors
-│   ├── planner/          # Path planning and multi-objective optimization
-│   ├── prioritization/   # Victim prioritization logic
-│   ├── explainability/   # LLM-based explanation generation
-│   ├── metrics/          # Performance tracking and KPI calculation
-│   └── api/              # FastAPI application and endpoint definitions
-├── ui/                   # User Interface (Streamlit or React)
+├── api/                  # FastAPI routes and API dependencies
+│   ├── __init__.py
+│   ├── dependencies.py   # FastAPI dependency injection functions
+│   ├── health.py         # Health and readiness endpoints
+│   └── routes.py         # Main API route definitions
+├── core/                 # Core utilities, configuration, and exceptions
+│   ├── __init__.py
+│   ├── config.py         # Application settings
+│   ├── exceptions.py     # Custom exception hierarchy
+│   ├── logger.py         # Centralized logger setup
+│   ├── logging.py        # Logging configuration
+│   └── utils.py          # Utility functions (e.g., thread pool runner)
+├── explainability/       # LLM interface and explanation generation logic
+│   ├── __init__.py
+│   └── llm_interface.py  # Abstract LLM interface and mock implementation
+├── infrastructure/       # System-level infrastructure components
+│   ├── __init__.py
+│   ├── mission_registry.py # Thread-safe mission state management
+│   └── rate_limiter.py   # In-memory rate limiting logic
+├── middleware/           # FastAPI middleware
+│   ├── __init__.py
+│   ├── logging_middleware.py # Structured request/response logging
+│   ├── rate_limiting_middleware.py # API rate limiting
+│   └── request_id.py     # Request ID generation and context propagation
+├── models/               # Pydantic data models
+│   ├── __init__.py
+│   └── models.py         # Core data models for the system
+├── services/             # Business logic services
+│   ├── __init__.py
+│   ├── agent_service.py
+│   ├── environment_service.py
+│   ├── explainability_service.py
+│   ├── metrics_service.py
+│   ├── mission_service.py # Orchestrates mission lifecycle
+│   ├── planner_service.py
+│   ├── prioritization_service.py
+│   ├── risk_service.py
 ├── tests/                # Unit and integration tests
-├── configs/              # Configuration files (.env, config.py)
-├── logs/                 # Structured log outputs
-├── requirements.txt      # Python dependencies
-├── README.md             # Project documentation
+│   ├── __init__.py
+│   ├── conftest.py       # Pytest fixtures and configurations
+│   ├── integration/
+│   │   └── test_api.py   # Integration tests for API endpoints
+│   └── unit/
+│       ├── test_environment.py
+│       ├── test_prioritization.py
+│       └── test_risk.py
+├── ui/                   # User Interface (Streamlit)
+│   └── main.py
+├── .env.example          # Example environment variables
+├── .github/              # GitHub Actions workflows
+│   └── workflows/
+│       └── ci.yml        # Continuous Integration workflow
 ├── judging_alignment.md  # Alignment with judging criteria
-└── .env.example          # Example environment variables
+├── main.py               # Main FastAPI application entry point
+├── mypy.ini              # Mypy configuration
+├── pyproject.toml        # Ruff configuration
+└── requirements.txt      # Python dependencies
 ```
 
-## 4. Core Intelligence Modules
+## 4. Core Intelligence Modules (Detailed)
 
-### 4.1. Environment Engine
+### 4.1. Environment Service
 -   Procedural disaster map generation.
 -   Dynamic hazard intensity modeling (fire, collapse, flood).
 -   Configurable grid sizes.
 -   Real-time risk recalculation based on environmental changes.
 
-### 4.2. Risk Modeling Layer
+### 4.2. Risk Service
 -   Hazard weight normalization.
 -   Probabilistic collapse modeling.
 -   Risk propagation to adjacent nodes, influencing path planning.
 
-### 4.3. Multi-Agent Coordination Engine
+### 4.3. Agent Service
 -   Manages multiple rescue agents.
 -   Task allocation via auction-based or heuristic models.
 -   Collision avoidance mechanisms.
 -   Route conflict resolution strategies.
 
-### 4.4. Planning Engine
+### 4.4. Planner Service
 -   Risk-weighted A* algorithm for pathfinding.
 -   Multi-objective optimization considering time, risk exposure, and energy cost.
 -   Dynamic re-planning capabilities in response to changing hazards or new information.
 
-### 4.5. Victim Prioritization Model
+### 4.5. Prioritization Service
 -   A configurable and extensible scoring function.
 -   Incorporates injury severity, time sensitivity, estimated survival window, and accessibility risk.
 
@@ -93,12 +132,15 @@ An abstract interface layer for LLM integration, allowing for flexible model pro
 -   Implemented via an `ExplainabilityService` class that accepts structured decision data and generates structured JSON explanations and human-readable summaries.
 
 ## 6. API Layer
-Built with FastAPI, offering robust and documented endpoints:
+Built with FastAPI, offering robust and documented endpoints, protected by rate limiting and structured logging:
+-   `GET /`: Root endpoint with basic API status.
+-   `GET /health`: Health check endpoint.
+-   `GET /ready`: Readiness check endpoint.
 -   `POST /simulate`: Initiate a disaster simulation.
--   `POST /plan`: Request a rescue plan for agents.
--   `GET /metrics`: Retrieve operational metrics and KPIs.
--   `GET /explain/{mission_id}`: Get explainable AI outputs for specific missions.
-All responses are structured JSON, adhering to Pydantic models, with automatic OpenAPI documentation.
+-   `POST /plan/{mission_id}`: Request a rescue plan for agents for a specific mission.
+-   `GET /metrics/{mission_id}`: Retrieve operational metrics and KPIs for a specific mission.
+-   `GET /explain/{mission_id}/{explanation_type}`: Get explainable AI outputs for specific decisions or mission summaries.
+All responses are structured JSON, adhering to Pydantic v2 models, with automatic OpenAPI documentation.
 
 ## 7. UI Layer
 A simple, professional user interface to visualize and interact with ADRIE. Currently planned with Streamlit for rapid prototyping:
@@ -152,7 +194,7 @@ A dedicated endpoint provides a business-facing summary of these metrics.
 
 ### Running the FastAPI Backend
 ```bash
-uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn adrie.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 The API documentation will be available at `http://127.0.0.1:8000/docs`.
 
@@ -166,7 +208,7 @@ streamlit run ui/main.py
 ADRIE uses `pytest` for unit and integration testing.
 
 ```bash
-pytest tests/
+pytest --cov=adrie --cov-report=term-missing --strict-markers
 ```
 
 ## 12. API Examples
@@ -183,33 +225,33 @@ curl -X POST "http://localhost:8000/simulate" -H "Content-Type: application/json
 
 ### Request Plan
 ```bash
-curl -X POST "http://localhost:8000/plan" -H "Content-Type: application/json" -d '{
-  "mission_id": "some_simulation_id",
-  "planning_params": {
-    "objective": "minimize_risk_exposure"
-  }
+curl -X POST "http://localhost:8000/plan/YOUR_MISSION_ID" -H "Content-Type: application/json" -d '{
+  "planning_objective": "minimize_risk_exposure",
+  "replan": false
 }'
 ```
 
 ### Get Metrics
 ```bash
-curl -X GET "http://localhost:8000/metrics"
+curl -X GET "http://localhost:8000/metrics/YOUR_MISSION_ID"
 ```
 
 ### Get Explanation
 ```bash
-curl -X GET "http://localhost:8000/explain/your_mission_id"
+curl -X GET "http://localhost:8000/explain/YOUR_MISSION_ID/victim_prioritization?decision_id=YOUR_VICTIM_ID"
 ```
 
 ## 13. Code Quality & Standards
 -   **Clean Architecture & SOLID Principles:** Enforced throughout the codebase.
--   **Strict Typing:** All Python code uses comprehensive type hints.
+-   **Strict Typing:** All Python code uses comprehensive type hints, enforced by MyPy.
+-   **Code Formatting & Linting:** Automated with Ruff for consistent style and error detection.
 -   **Docstrings:** Every module, class, and function includes clear docstrings.
 -   **Separation of Concerns:** Distinct modules handle specific functionalities.
 -   **Production Logging:** Structured logging implemented for traceability and debugging.
--   **Error Handling:** Robust error handling mechanisms.
--   **Async where appropriate:** Leveraging Python's `asyncio` for I/O bound operations.
+-   **Error Handling:** Robust and specific exception hierarchy.
+-   **Async where appropriate:** Leveraging Python's `asyncio` for I/O bound operations, offloading CPU-bound tasks to a `ThreadPoolExecutor`.
 -   **Configuration:** Environment-specific settings managed via `.env` files and a central `config.py`.
+-   **Security:** Includes rate limiting and strict Pydantic model validation (`extra='forbid'`).
 
 ## 14. Contributing
 Contributions are welcome! Please refer to the `CONTRIBUTING.md` (to be created) for guidelines.

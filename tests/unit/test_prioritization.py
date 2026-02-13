@@ -4,16 +4,18 @@ Unit tests for the VictimPrioritizationModel module.
 
 import pytest
 from uuid import uuid4
-from app.environment.engine import EnvironmentEngine
-from app.risk.model import RiskModel
-from app.prioritization.model import VictimPrioritizationModel, PrioritizationConfig
-from app.core.models import Victim, InjurySeverity, Coordinate, VictimStatus, NodeRisk, RiskLevel
+from adrie.services.environment_service import EnvironmentService
+from adrie.services.risk_service import RiskService
+from adrie.services.prioritization_service import PrioritizationService
+from adrie.models.models import Victim, InjurySeverity, Coordinate, VictimStatus, NodeRisk, RiskLevel, PrioritizationConfig, SimulateRequest
+from typing import Tuple
+from concurrent.futures import ThreadPoolExecutor # Import ThreadPoolExecutor
 
 @pytest.fixture
-def initialized_env_and_risk(environment_engine: EnvironmentEngine, risk_model: RiskModel):
+async def initialized_env_and_risk(environment_engine: EnvironmentService, risk_model: RiskService, executor_fixture: ThreadPoolExecutor) -> Tuple[EnvironmentService, RiskService]:
     """Fixture to provide an initialized environment and risk model."""
-    request = environment_engine.SimulateRequest(map_size=10, hazard_intensity_factor=0.5, num_victims=0, num_agents=0, seed=42)
-    environment_engine.initialize_environment(request)
+    request = SimulateRequest(map_size=10, hazard_intensity_factor=0.5, num_victims=0, num_agents=0, seed=42)
+    await environment_engine.initialize_environment(request)
     # Manually set a risk map for predictability
     for x in range(environment_engine.grid_size):
         for y in range(environment_engine.grid_size):
@@ -27,27 +29,27 @@ def initialized_env_and_risk(environment_engine: EnvironmentEngine, risk_model: 
     return environment_engine, risk_model
 
 @pytest.mark.asyncio
-async def test_prioritization_model_initialization(initialized_env_and_risk):
-    """Test if the VictimPrioritizationModel initializes correctly."""
+async def test_prioritization_model_initialization(initialized_env_and_risk: Tuple[EnvironmentService, RiskService], executor_fixture: ThreadPoolExecutor) -> None:
+    """Test if the PrioritizationService initializes correctly."""
     env, risk = initialized_env_and_risk
-    model = VictimPrioritizationModel(env, risk)
+    model = PrioritizationService(env, risk, executor=executor_fixture)
     assert model.env == env
     assert model.risk_model == risk
     assert isinstance(model.config, PrioritizationConfig)
 
 @pytest.mark.asyncio
-async def test_prioritize_victims_empty_list(initialized_env_and_risk):
+async def test_prioritize_victims_empty_list(initialized_env_and_risk: Tuple[EnvironmentService, RiskService], executor_fixture: ThreadPoolExecutor) -> None:
     """Test prioritization with an empty list of victims."""
     env, risk = initialized_env_and_risk
-    model = VictimPrioritizationModel(env, risk)
+    model = PrioritizationService(env, risk, executor=executor_fixture)
     prioritized = await model.prioritize_victims([])
     assert len(prioritized) == 0
 
 @pytest.mark.asyncio
-async def test_prioritize_single_victim(initialized_env_and_risk):
+async def test_prioritize_single_victim(initialized_env_and_risk: Tuple[EnvironmentService, RiskService], executor_fixture: ThreadPoolExecutor) -> None:
     """Test prioritization of a single victim."""
     env, risk = initialized_env_and_risk
-    model = VictimPrioritizationModel(env, risk)
+    model = PrioritizationService(env, risk, executor=executor_fixture)
 
     victim = Victim(
         id=uuid4(),
@@ -55,7 +57,11 @@ async def test_prioritize_single_victim(initialized_env_and_risk):
         injury_severity=InjurySeverity.SEVERE,
         time_since_incident_minutes=30,
         estimated_survival_window_minutes=120,
-        accessibility_risk=0.3 # Initial, will be overridden by risk_model
+        accessibility_risk=0.3, # Initial, will be overridden by risk_model
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        is_rescued=False,
+        assigned_agent_id=None
     )
     victims = [victim]
     prioritized = await model.prioritize_victims(victims)
@@ -65,10 +71,10 @@ async def test_prioritize_single_victim(initialized_env_and_risk):
     assert 0.0 < prioritized[0].priority_score <= 1.0 # Score should be calculated
 
 @pytest.mark.asyncio
-async def test_prioritize_multiple_victims(initialized_env_and_risk):
+async def test_prioritize_multiple_victims(initialized_env_and_risk: Tuple[EnvironmentService, RiskService], executor_fixture: ThreadPoolExecutor) -> None:
     """Test prioritization with multiple victims with varying attributes."""
     env, risk = initialized_env_and_risk
-    model = VictimPrioritizationModel(env, risk)
+    model = PrioritizationService(env, risk, executor=executor_fixture)
 
     # Victim 1: High severity, short survival, medium accessibility risk
     victim1 = Victim(
@@ -77,7 +83,11 @@ async def test_prioritize_multiple_victims(initialized_env_and_risk):
         injury_severity=InjurySeverity.CRITICAL,
         time_since_incident_minutes=90,
         estimated_survival_window_minutes=120,
-        accessibility_risk=0.8
+        accessibility_risk=0.8,
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        is_rescued=False,
+        assigned_agent_id=None
     )
     # Victim 2: Medium severity, longer survival, low accessibility risk
     victim2 = Victim(
@@ -86,7 +96,11 @@ async def test_prioritize_multiple_victims(initialized_env_and_risk):
         injury_severity=InjurySeverity.MODERATE,
         time_since_incident_minutes=10,
         estimated_survival_window_minutes=360,
-        accessibility_risk=0.1
+        accessibility_risk=0.1,
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        is_rescued=False,
+        assigned_agent_id=None
     )
     # Victim 3: Severe, medium survival, medium accessibility risk
     victim3 = Victim(
@@ -95,7 +109,11 @@ async def test_prioritize_multiple_victims(initialized_env_and_risk):
         injury_severity=InjurySeverity.SEVERE,
         time_since_incident_minutes=60,
         estimated_survival_window_minutes=240,
-        accessibility_risk=0.4
+        accessibility_risk=0.4,
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        is_rescued=False,
+        assigned_agent_id=None
     )
 
     victims = [victim1, victim2, victim3]
@@ -116,10 +134,10 @@ async def test_prioritize_multiple_victims(initialized_env_and_risk):
         assert 0.0 <= v.priority_score <= 1.0
 
 @pytest.mark.asyncio
-async def test_prioritize_rescued_victim(initialized_env_and_risk):
+async def test_prioritize_rescued_victim(initialized_env_and_risk: Tuple[EnvironmentService, RiskService], executor_fixture: ThreadPoolExecutor) -> None:
     """Test that rescued victims are not prioritized."""
     env, risk = initialized_env_and_risk
-    model = VictimPrioritizationModel(env, risk)
+    model = PrioritizationService(env, risk, executor=executor_fixture)
 
     victim_rescued = Victim(
         id=uuid4(),
@@ -129,7 +147,9 @@ async def test_prioritize_rescued_victim(initialized_env_and_risk):
         estimated_survival_window_minutes=60,
         accessibility_risk=0.1,
         is_rescued=True,
-        status=VictimStatus.SAFE
+        status=VictimStatus.SAFE,
+        priority_score=0.0,
+        assigned_agent_id=None
     )
     victim_not_rescued = Victim(
         id=uuid4(),
@@ -138,7 +158,10 @@ async def test_prioritize_rescued_victim(initialized_env_and_risk):
         time_since_incident_minutes=20,
         estimated_survival_window_minutes=120,
         accessibility_risk=0.2,
-        is_rescued=False
+        is_rescued=False,
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        assigned_agent_id=None
     )
 
     victims = [victim_rescued, victim_not_rescued]
@@ -152,7 +175,7 @@ async def test_prioritize_rescued_victim(initialized_env_and_risk):
     assert prioritized[1].priority_score == 0.0
 
 @pytest.mark.asyncio
-async def test_prioritization_with_custom_config(initialized_env_and_risk):
+async def test_prioritization_with_custom_config(initialized_env_and_risk: Tuple[EnvironmentService, RiskService], executor_fixture: ThreadPoolExecutor) -> None:
     """Test prioritization with a custom configuration."""
     env, risk = initialized_env_and_risk
     custom_config = PrioritizationConfig(
@@ -161,7 +184,7 @@ async def test_prioritization_with_custom_config(initialized_env_and_risk):
         accessibility_risk_weight=0.1,
         num_agents_available_weight=0.0
     )
-    model = VictimPrioritizationModel(env, risk, config=custom_config)
+    model = PrioritizationService(env, risk, executor=executor_fixture, config=custom_config)
 
     # Victim 1: High severity, but long survival window
     victim1 = Victim(
@@ -170,7 +193,11 @@ async def test_prioritization_with_custom_config(initialized_env_and_risk):
         injury_severity=InjurySeverity.CRITICAL,
         time_since_incident_minutes=10,
         estimated_survival_window_minutes=300, # Long survival
-        accessibility_risk=0.2
+        accessibility_risk=0.2,
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        is_rescued=False,
+        assigned_agent_id=None
     )
     # Victim 2: Medium severity, but very short survival window
     victim2 = Victim(
@@ -179,7 +206,11 @@ async def test_prioritization_with_custom_config(initialized_env_and_risk):
         injury_severity=InjurySeverity.MODERATE,
         time_since_incident_minutes=80,
         estimated_survival_window_minutes=100, # Short survival
-        accessibility_risk=0.2
+        accessibility_risk=0.2,
+        status=VictimStatus.TRAPPED,
+        priority_score=0.0,
+        is_rescued=False,
+        assigned_agent_id=None
     )
 
     victims = [victim1, victim2]
