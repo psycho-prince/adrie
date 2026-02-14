@@ -6,9 +6,7 @@
 ADRIE is not just a disaster response tool; it's a strategic AI engine designed to bring order to chaos. In the critical moments after a disaster, every second counts. ADRIE transforms response operations by generating risk-aware, optimized multi-agent rescue plans and visualizing them in a live, interactive 3D environment. We're building the "digital twin" for disaster sites, enabling commanders to make intelligent, data-driven decisions that save lives.
 
 [![ADRIE Simulation UI](https://i.imgur.com/your-image-url.png)](https://adrie-api.onrender.com/simulation) 
-*(Note: Add a screenshot of your simulation UI here and link to the live demo)*
-
----
+*(
 
 ### 🚀 The Vision: From API to Action
 
