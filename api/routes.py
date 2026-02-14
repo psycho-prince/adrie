@@ -202,6 +202,31 @@ async def simulate(
 
 
 @router.post(
+    "/simulate/{mission_id}/step",
+    status_code=status.HTTP_200_OK,
+    summary="Run a single step of the simulation.",
+)
+async def run_simulation_step(
+    mission_id: UUID,
+    mission_service: MissionService = Depends(get_mission_service),
+) -> Dict[str, Any]:
+    """Runs a single step of the simulation for the given mission ID."""
+    try:
+        return await mission_service.run_simulation_step(mission_id)
+    except MissionNotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
+    except Exception as e:
+        logger.error(f"Error running simulation step for mission {mission_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred during simulation step: {e}"
+        )
+
+
+@router.post(
     "/plan/{mission_id}",
     response_model=PlanResponse,
     status_code=status.HTTP_200_OK,
