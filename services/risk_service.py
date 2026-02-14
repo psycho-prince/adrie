@@ -5,10 +5,10 @@ It calculates risk factors for individual grid nodes based on hazards and enviro
 from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor
 from typing import Dict, List, Optional
 
-from adrie.core.config import settings  # Import settings
-from adrie.core.utils import run_in_threadpool
-from adrie.models.models import Coordinate, Hazard, HazardType, NodeRisk, RiskLevel
-from adrie.services.environment_service import EnvironmentService
+from core.config import settings  # Import settings
+from core.utils import run_in_threadpool
+from models.models import Coordinate, Hazard, HazardType, NodeRisk, RiskLevel
+from services.environment_service import EnvironmentService
 
 
 class RiskService:

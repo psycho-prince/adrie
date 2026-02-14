@@ -17,7 +17,7 @@ from pydantic import (
     PositiveInt,
 )
 
-from adrie.core.config import settings  # Import settings
+from core.config import settings  # Import settings
 
 # --- Basic Geometric Models ---
 

@@ -3,16 +3,16 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from adrie.core.exceptions import (
+from core.exceptions import (
     InvalidExplanationRequestException,
     MissionNotFoundException,
     ServiceInitializationException,
     VictimNotFoundException, # New import
     AgentNotFoundException, # New import
 )
-from adrie.explainability.llm_interface import LLMInterface, MockLLM
-from adrie.infrastructure.mission_registry import MissionRegistry # Import the class
-from adrie.models.models import (
+from explainability.llm_interface import LLMInterface, MockLLM
+from infrastructure.mission_registry import MissionRegistry # Import the class
+from models.models import (
     Agent,
     Coordinate,
     ExplainabilityOutput,

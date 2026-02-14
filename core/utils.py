@@ -2,7 +2,7 @@ import asyncio
 import concurrent.futures
 from typing import Any, Callable
 
-from adrie.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

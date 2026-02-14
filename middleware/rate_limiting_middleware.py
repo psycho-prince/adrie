@@ -5,9 +5,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp
 
-from adrie.core.config import settings
-from adrie.core.logger import get_logger
-from adrie.infrastructure.rate_limiter import RateLimiter
+from core.config import settings
+from core.logger import get_logger
+from infrastructure.rate_limiter import RateLimiter
 
 logger = get_logger(__name__)
 

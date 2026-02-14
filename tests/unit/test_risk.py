@@ -3,9 +3,9 @@ Unit tests for the RiskModel module.
 """
 
 import pytest
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.risk_service import RiskService
-from adrie.models.models import SimulateRequest, Coordinate, Hazard, HazardType, NodeRisk, RiskLevel
+from services.environment_service import EnvironmentService
+from services.risk_service import RiskService
+from models.models import SimulateRequest, Coordinate, Hazard, HazardType, NodeRisk, RiskLevel
 from uuid import uuid4
 
 @pytest.mark.asyncio

@@ -5,7 +5,7 @@ Provides a pre-configured logger instance that uses the settings defined in conf
 
 import logging
 
-from adrie.core.logging import (
+from core.logging import (
     configure_logging,
 )  # Import to ensure logging is configured
 

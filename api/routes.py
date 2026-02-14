@@ -4,12 +4,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from adrie.api.dependencies import (
+from api.dependencies import (
     get_thread_pool_executor,
     get_mission_registry,
 )
-from adrie.core.config import settings
-from adrie.core.exceptions import (
+from core.config import settings
+from core.exceptions import (
     ExplanationNotImplementedException,
     InvalidExplanationRequestException,
     MetricsCalculationException,
@@ -20,9 +20,9 @@ from adrie.core.exceptions import (
     VictimNotFoundException, # New import
     AgentNotFoundException, # New import
 )
-from adrie.core.logger import get_logger
-from adrie.infrastructure.mission_registry import MissionRegistry
-from adrie.models.models import (
+from core.logger import get_logger
+from infrastructure.mission_registry import MissionRegistry
+from models.models import (
     ExplainabilityOutput,
     ExplanationType,
     MetricsSummary,
@@ -31,14 +31,14 @@ from adrie.models.models import (
     SimulateRequest,
     SimulateResponse,
 )
-from adrie.services.agent_service import AgentService
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.explainability_service import ExplainabilityService
-from adrie.services.metrics_service import MetricsService
-from adrie.services.mission_service import MissionService
-from adrie.services.planner_service import PlannerService
-from adrie.services.prioritization_service import PrioritizationService
-from adrie.services.risk_service import RiskService
+from services.agent_service import AgentService
+from services.environment_service import EnvironmentService
+from services.explainability_service import ExplainabilityService
+from services.metrics_service import MetricsService
+from services.mission_service import MissionService
+from services.planner_service import PlannerService
+from services.prioritization_service import PrioritizationService
+from services.risk_service import RiskService
 
 router = APIRouter()
 logger = get_logger(__name__)

@@ -8,15 +8,15 @@ from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
-from adrie.core.utils import run_in_threadpool  # Import run_in_threadpool
-from adrie.models.models import (
+from core.utils import run_in_threadpool  # Import run_in_threadpool
+from models.models import (
     Agent,
     AgentPlan,
     AgentTask,
     Coordinate,
 )
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.risk_service import RiskService
+from services.environment_service import EnvironmentService
+from services.risk_service import RiskService
 
 
 class PlannerService:

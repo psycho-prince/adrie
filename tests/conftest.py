@@ -4,18 +4,18 @@ Configuration and fixtures for pytest.
 
 import pytest
 from httpx import AsyncClient
-from adrie.main import create_app # Import the factory function
-from adrie.api.dependencies import get_mission_registry # This import should now succeed
-from adrie.infrastructure.mission_registry import MissionRegistry
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.risk_service import RiskService
-from adrie.services.agent_service import AgentService
-from adrie.services.planner_service import PlannerService
-from adrie.services.prioritization_service import PrioritizationService
-from adrie.services.explainability_service import ExplainabilityService
-from adrie.services.metrics_service import MetricsService
-from adrie.services.mission_service import MissionService
-from adrie.services.metrics_service import MetricsService
+from main import create_app # Import the factory function
+from api.dependencies import get_mission_registry # This import should now succeed
+from infrastructure.mission_registry import MissionRegistry
+from services.environment_service import EnvironmentService
+from services.risk_service import RiskService
+from services.agent_service import AgentService
+from services.planner_service import PlannerService
+from services.prioritization_service import PrioritizationService
+from services.explainability_service import ExplainabilityService
+from services.metrics_service import MetricsService
+from services.mission_service import MissionService
+from services.metrics_service import MetricsService
 from uuid import uuid4, UUID
 from typing import Generator, AsyncGenerator, Tuple
 from concurrent.futures import ThreadPoolExecutor

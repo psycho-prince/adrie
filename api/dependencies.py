@@ -6,8 +6,8 @@ from fastapi import (
     Depends,
 )
 
-from adrie.core.logger import get_logger
-from adrie.infrastructure.mission_registry import MissionRegistry # Import MissionRegistry (class)
+from core.logger import get_logger
+from infrastructure.mission_registry import MissionRegistry # Import MissionRegistry (class)
 
 logger = get_logger(__name__)
 

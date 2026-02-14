@@ -4,8 +4,8 @@ Unit tests for the EnvironmentEngine module.
 
 import pytest
 from uuid import UUID
-from adrie.services.environment_service import EnvironmentService
-from adrie.models.models import SimulateRequest, Coordinate, HazardType, VictimStatus, InjurySeverity
+from services.environment_service import EnvironmentService
+from models.models import SimulateRequest, Coordinate, HazardType, VictimStatus, InjurySeverity
 
 @pytest.mark.asyncio
 async def test_environment_initialization(environment_engine: EnvironmentService) -> None:
@@ -125,4 +125,3 @@ async def test_reset_environment(environment_engine: EnvironmentService) -> None
     assert not environment_engine.hazards
     assert not environment_engine.victims
     assert environment_engine._initialized is False
-

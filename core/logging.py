@@ -8,8 +8,8 @@ import logging
 import os
 from datetime import datetime
 
-from adrie.core.config import settings
-from adrie.middleware.request_id import request_id_ctx  # Import ContextVar
+from core.config import settings
+from middleware.request_id import request_id_ctx  # Import ContextVar
 
 
 class JsonFormatter(logging.Formatter):

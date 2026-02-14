@@ -6,8 +6,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
-from adrie.core.logger import get_logger
-from adrie.middleware.request_id import get_request_id
+from core.logger import get_logger
+from middleware.request_id import get_request_id
 
 logger = get_logger(__name__)
 

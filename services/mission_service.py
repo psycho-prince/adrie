@@ -6,12 +6,12 @@ from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
 
-from adrie.core.exceptions import (
+from core.exceptions import (
     MissionConflictException,
     MissionNotFoundException,
 )
-from adrie.infrastructure.mission_registry import MissionRegistry # Import the class
-from adrie.models.models import (
+from infrastructure.mission_registry import MissionRegistry # Import the class
+from models.models import (
     Agent,
     AgentCapability,
     AgentStatus,
@@ -24,13 +24,13 @@ from adrie.models.models import (
     SimulateRequest,
     SimulateResponse,
 )
-from adrie.services.agent_service import AgentService
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.explainability_service import ExplainabilityService
-from adrie.services.metrics_service import MetricsService
-from adrie.services.planner_service import PlannerService
-from adrie.services.prioritization_service import PrioritizationService
-from adrie.services.risk_service import RiskService
+from services.agent_service import AgentService
+from services.environment_service import EnvironmentService
+from services.explainability_service import ExplainabilityService
+from services.metrics_service import MetricsService
+from services.planner_service import PlannerService
+from services.prioritization_service import PrioritizationService
+from services.risk_service import RiskService
 
 
 class MissionService:

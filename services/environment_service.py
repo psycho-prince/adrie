@@ -10,8 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional, Set
 from uuid import UUID, uuid4
 
-from adrie.core.utils import run_in_threadpool
-from adrie.models.models import (
+from core.utils import run_in_threadpool
+from models.models import (
     Coordinate,
     GridNode,
     Hazard,

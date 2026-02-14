@@ -2,8 +2,8 @@ import asyncio
 from typing import Any, Dict
 from uuid import UUID
 
-from adrie.core.exceptions import MissionConflictException, MissionNotFoundException
-from adrie.models.models import Mission
+from core.exceptions import MissionConflictException, MissionNotFoundException
+from models.models import Mission
 # Removed all service imports
 
 

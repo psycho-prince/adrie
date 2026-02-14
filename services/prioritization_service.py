@@ -1,11 +1,11 @@
 from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor
 from typing import List, Optional
 
-from adrie.core.config import settings
-from adrie.core.utils import run_in_threadpool
-from adrie.models.models import InjurySeverity, PrioritizationConfig, Victim
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.risk_service import RiskService
+from core.config import settings
+from core.utils import run_in_threadpool
+from models.models import InjurySeverity, PrioritizationConfig, Victim
+from services.environment_service import EnvironmentService
+from services.risk_service import RiskService
 
 
 class PrioritizationService:

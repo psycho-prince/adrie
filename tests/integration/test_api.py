@@ -6,11 +6,11 @@ These tests use a test client to simulate HTTP requests to the API.
 import pytest
 from httpx import AsyncClient
 from uuid import UUID
-from adrie.models.models import SimulateRequest, SimulateResponse, PlanRequest, PlanResponse, ExplanationType
-from adrie.infrastructure.mission_registry import MissionRegistry # Added missing import
-from adrie.models.models import Mission, MissionStatus, AgentType, AgentCapability, Coordinate
-from adrie.services.environment_service import EnvironmentService # Import EnvironmentService
-from adrie.services.agent_service import AgentService # Import AgentService
+from models.models import SimulateRequest, SimulateResponse, PlanRequest, PlanResponse, ExplanationType
+from infrastructure.mission_registry import MissionRegistry # Added missing import
+from models.models import Mission, MissionStatus, AgentType, AgentCapability, Coordinate
+from services.environment_service import EnvironmentService # Import EnvironmentService
+from services.agent_service import AgentService # Import AgentService
 
 @pytest.mark.asyncio
 async def test_root_endpoint(test_app: AsyncClient) -> None:

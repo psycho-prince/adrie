@@ -4,10 +4,10 @@ Unit tests for the VictimPrioritizationModel module.
 
 import pytest
 from uuid import uuid4
-from adrie.services.environment_service import EnvironmentService
-from adrie.services.risk_service import RiskService
-from adrie.services.prioritization_service import PrioritizationService
-from adrie.models.models import Victim, InjurySeverity, Coordinate, VictimStatus, NodeRisk, RiskLevel, PrioritizationConfig, SimulateRequest
+from services.environment_service import EnvironmentService
+from services.risk_service import RiskService
+from services.prioritization_service import PrioritizationService
+from models.models import Victim, InjurySeverity, Coordinate, VictimStatus, NodeRisk, RiskLevel, PrioritizationConfig, SimulateRequest
 from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor # Import ThreadPoolExecutor
 

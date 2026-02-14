@@ -3,11 +3,11 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from adrie.models.models import Agent, AgentCapability, AgentTask, Coordinate, Victim
-from adrie.utils.asynctools import run_in_threadpool
+from models.models import Agent, AgentCapability, AgentTask, Coordinate, Victim
+from utils.asynctools import run_in_threadpool
 
 
-from adrie.services.environment_service import EnvironmentService # Added import
+from services.environment_service import EnvironmentService # Added import
 
 class AgentService:
     def __init__(self, environment_service: EnvironmentService, executor: ThreadPoolExecutor):
