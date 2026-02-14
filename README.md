@@ -101,3 +101,13 @@ ADRIE is configured for seamless deployment on Render.
 *   **Reinforcement Learning**: Use RL to train agents for even more complex and adaptive behaviors.
 *   **Hardware Integration**: Develop connectors for popular robotics platforms (e.g., ROS, DJI drones).
 *   **Cloud-Native Scaling**: Deploy on Kubernetes for high-availability, large-scale simulations.
+
+## Quick Demo (after deploy)
+
+Once deployed, you can interact with the Adrie Simulation Dashboard:
+
+1.  Open your browser and navigate to `https://adrie-api.onrender.com/simulation`.
+2.  Click the "Initiate New Simulation" button to start a new mission.
+3.  Observe the Mission ID, Status, and KPIs updating automatically.
+4.  Once the simulation status shows "completed", click the "Generate Plan" button to fetch and display the AI-generated plan.
+
