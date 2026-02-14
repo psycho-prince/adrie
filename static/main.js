@@ -6,7 +6,7 @@
     const statusSpan = document.getElementById('status');
     const kpiSuccessRateSpan = document.getElementById('kpi-success-rate');
     const kpiTimeTakenSpan = document.getElementById('kpi-time-taken');
-    const planJsonPre = document.getElementById('plan-json');
+    const planJsonPre = document.getElementById('plan-json'); // Corresponds to <pre id="plan-json"> in HTML
 
     let currentMissionId = null;
     let pollingInterval = null;
@@ -21,12 +21,21 @@
         kpiTimeTakenSpan.textContent = 'N/A';
 
         try {
+            const seed = Math.floor(Math.random() * 100000); // Generate a random seed
+            const simulationParams = {
+                map_size: 50,
+                hazard_intensity_factor: 0.5,
+                num_victims: 10,
+                num_agents: 3,
+                seed: seed
+            };
+
             const response = await fetch('/simulate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ /* Add any simulation parameters here */ })
+                body: JSON.stringify(simulationParams)
             });
             const data = await response.json();
 
@@ -90,7 +99,7 @@
         if (pollingInterval) {
             clearInterval(pollingInterval);
         }
-        pollingInterval = setInterval(pollMetrics, 3000); // Poll every 3 seconds
+        pollingInterval = setInterval(pollMetrics, 5000); // Poll every 5 seconds as requested
         pollMetrics(); // Initial call
     }
 
@@ -103,12 +112,16 @@
         planJsonPre.textContent = 'Generating plan...';
 
         try {
-            const response = await fetch('/plan', {
+            const planParams = {
+                planning_objective: "minimize_risk_exposure",
+                replan: false
+            };
+            const response = await fetch(`/plan/${currentMissionId}`, { // Updated endpoint with mission_id
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ mission_id: currentMissionId })
+                body: JSON.stringify(planParams)
             });
             const data = await response.json();
 

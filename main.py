@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from typing import Dict, Any
+import random # Needed for mock seed
 
 app = FastAPI()
 
@@ -9,7 +10,6 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Hypothetical placeholder for simulation/plan/metrics logic
-# In a real app, these would interact with your core/services
 simulation_data: Dict[str, Any] = {}
 
 @app.get("/")
@@ -62,20 +62,30 @@ async def simulation_dashboard():
 @app.post("/simulate")
 async def simulate_endpoint(request: Request):
     # In a real scenario, this would trigger a background task or service
-    # For now, let's mock some data
     body = await request.json()
-    mission_id = f"sim-{len(simulation_data) + 1}"
+    map_size = body.get("map_size", 50)
+    hazard_intensity_factor = body.get("hazard_intensity_factor", 0.5)
+    num_victims = body.get("num_victims", 10)
+    num_agents = body.get("num_agents", 3)
+    seed = body.get("seed", random.randint(0, 100000)) # Use random if not provided
+
+    mission_id = f"sim-{len(simulation_data) + 1}-{seed}"
     simulation_data[mission_id] = {
         "status": "running",
         "kpis": {"success_rate": 0, "time_taken": 0},
         "plan": None,
-        "input_params": body # Store input parameters if any
+        "input_params": {
+            "map_size": map_size,
+            "hazard_intensity_factor": hazard_intensity_factor,
+            "num_victims": num_victims,
+            "num_agents": num_agents,
+            "seed": seed
+        }
     }
-    return {"mission_id": mission_id, "status": "running", "message": "Simulation initiated."}
+    return {"mission_id": mission_id, "status": "running", "message": "Simulation initiated with parameters."}
 
 @app.get("/metrics")
 async def get_metrics_endpoint(mission_id: str):
-    # Mock metrics update
     if mission_id not in simulation_data:
         return {"error": "Mission ID not found"}, 404
     
@@ -85,31 +95,33 @@ async def get_metrics_endpoint(mission_id: str):
     # Simulate progress
     if current_status == "running":
         import random
-        current_kpis["success_rate"] = round(min(1.0, current_kpis["success_rate"] + random.uniform(0.05, 0.15)), 2)
-        current_kpis["time_taken"] = round(current_kpis["time_taken"] + random.randint(5, 20), 0)
-        if current_kpis["success_rate"] >= 0.9: # Simulate completion
+        current_kpis["success_rate"] = round(min(1.0, current_kpis["success_rate"] + random.uniform(0.03, 0.08)), 2)
+        current_kpis["time_taken"] = round(current_kpis["time_taken"] + random.randint(10, 30), 0) # Simulate longer time
+        if current_kpis["success_rate"] >= 0.95 and current_kpis["time_taken"] >= 100: # Simulate completion with a bit more logic
             simulation_data[mission_id]["status"] = "completed"
             
     return {"mission_id": mission_id, "status": simulation_data[mission_id]["status"], "kpis": simulation_data[mission_id]["kpis"]}
 
-@app.post("/plan")
-async def generate_plan_endpoint(request: Request):
-    # In a real scenario, this would use the gemini_planner.py logic
-    body = await request.json()
-    mission_id = body.get("mission_id")
+@app.post("/plan/{mission_id}") # Changed to accept mission_id in path
+async def generate_plan_endpoint(mission_id: str, request: Request):
     if not mission_id or mission_id not in simulation_data:
         return {"error": "Invalid Mission ID"}, 400
 
+    body = await request.json()
+    planning_objective = body.get("planning_objective", "minimize_risk_exposure")
+    replan = body.get("replan", False)
+
     # Mock plan generation
-    if simulation_data[mission_id]["plan"] is None:
+    if simulation_data[mission_id]["plan"] is None or replan:
         simulation_data[mission_id]["plan"] = {
             "mission": mission_id,
-            "description": "This is a mock plan generated for the simulation.",
+            "objective": planning_objective,
+            "description": f"This is a mock plan generated for simulation {mission_id} with objective: {planning_objective}.",
             "steps": [
-                {"step_number": 1, "action": "Analyze initial conditions", "status": "completed"},
-                {"step_number": 2, "action": "Formulate strategy based on KPIs", "status": "in_progress"},
-                {"step_number": 3, "action": "Execute primary actions", "status": "pending"}
+                {"step_number": 1, "action": "Prioritize highest risk victims", "status": "completed"},
+                {"step_number": 2, "action": "Formulate strategy based on real-time data", "status": "in_progress"},
+                {"step_number": 3, "action": "Execute primary actions for extraction", "status": "pending"}
             ],
-            "ethical_review": "Passed with minor concerns regarding resource allocation."
+            "ethical_review": "Plan prioritizes highest risk victims first, minimizing overall casualties. Trade-offs include longer travel times for lower-risk individuals."
         }
     return {"mission_id": mission_id, "plan": simulation_data[mission_id]["plan"]}
