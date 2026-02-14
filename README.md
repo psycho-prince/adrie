@@ -1,346 +1,105 @@
-ADRIE — Autonomous Disaster Response Intelligence Engine
-
-Enterprise-grade AI platform for multi-agent disaster response planning, risk-aware routing, and explainable decision intelligence.
-
+# ADRIE — Autonomous Disaster Response Intelligence Engine
+**From AI-Powered Plans to Real-Time 3D Simulation: The Future of Coordinated Rescue.**
 
 ---
 
-📚 Table of Contents
+ADRIE is not just a disaster response tool; it's a strategic AI engine designed to bring order to chaos. In the critical moments after a disaster, every second counts. ADRIE transforms response operations by generating risk-aware, optimized multi-agent rescue plans and visualizing them in a live, interactive 3D environment. We're building the "digital twin" for disaster sites, enabling commanders to make intelligent, data-driven decisions that save lives.
 
-1. Overview
-
-
-2. Features
-
-
-3. Architecture
-
-
-4. Project Structure
-
-
-5. Quick Start
-
-
-6. Running Locally (All OS)
-
-
-7. Running in Termux
-
-
-8. Running with Docker
-
-
-9. Running Tests
-
-
-10. API Usage
-
-
-11. Deploying to Render
-
-
-12. Troubleshooting
-
-
-13. Contributing
-
-
-14. License
-
-
-
+[![ADRIE Simulation UI](https://i.imgur.com/your-image-url.png)](https://adrie-api.onrender.com/simulation) 
+*(Note: Add a screenshot of your simulation UI here and link to the live demo)*
 
 ---
 
-🧠 Overview
+### 🚀 The Vision: From API to Action
 
-ADRIE is a modular AI system that simulates disaster environments and produces risk-optimized multi-agent rescue plans with full explainability.
+While many systems can *plan*, ADRIE *shows*. Our powerful FastAPI backend is complemented by a dynamic **3D simulation built with Three.js**. This isn't just a feature—it's the core of our vision.
 
-It combines:
-
-Multi-agent planning
-
-Risk modeling
-
-Ethical prioritization
-
-Explainable AI
-
-Operational metrics
-
-
+*   **For Commanders:** See the disaster site, understand the risks, and watch the rescue plan unfold in real-time.
+*   **For AI Researchers:** A powerful testbed for multi-agent coordination and pathfinding algorithms.
+*   **For Hackathon Judges:** A tangible, "wow-factor" demonstration that goes beyond a conceptual API.
 
 ---
 
-✨ Features
+### 🏆 Hackathon Impact Statement
 
-✔ Disaster simulation engine
-✔ Risk-weighted A* path planning
-✔ Multi-agent coordination
-✔ LLM explainability
-✔ Metrics & KPIs
-✔ Production-ready FastAPI backend
-✔ OpenAPI docs
+**ADRIE is a top-5 contender because it combines technical depth, a clear business case, and profound human impact.**
 
+*   **Business Impact**: The global market for disaster response robotics is projected to exceed **$25 billion by 2028**. ADRIE is positioned as an enterprise-grade "mission control" software for this rapidly growing industry. Our modular architecture allows for integration with various hardware (drones, rovers) and a SaaS-based revenue model for emergency services, government agencies, and private security firms.
 
----
+*   **AI Innovation**: ADRIE is more than a simple pathfinding tool. It's a multi-layered AI system:
+    1.  **Risk-Weighted A* Algorithm**: For intelligent, risk-aware pathfinding.
+    2.  **Configurable Prioritization Models**: To make ethical and effective decisions on victim rescue order.
+    3.  **LLM-Powered Explainability**: To provide human-readable justifications for complex AI decisions (e.g., "Why was this victim prioritized?").
+    4.  **Real-Time Simulation**: A "digital twin" of the disaster site for live monitoring and what-if analysis.
 
-🏗 Architecture
-
-ADRIE follows Clean Architecture and SOLID principles.
-
-Core layers:
-
-API Layer — FastAPI endpoints
-
-Services — Business logic
-
-Models — Pydantic schemas
-
-Infrastructure — State & orchestration
-
-Explainability — LLM interface
-
-
+*   **Human Impact**: By optimizing rescue plans and minimizing risk to first responders, ADRIE directly contributes to:
+    1.  **Saving more lives** by reaching critical victims faster.
+    2.  **Protecting our heroes** by routing them away from unnecessary danger.
+    3.  **Bringing clarity and efficiency** to the most stressful and chaotic environments imaginable.
 
 ---
 
-📂 Project Structure
+### 🎮 Live Demo & Usage
 
-adrie/
- ├── api/
- ├── core/
- ├── explainability/
- ├── infrastructure/
- ├── middleware/
- ├── models/
- ├── services/
- ├── tests/
- ├── ui/
- main.py
- requirements.txt
+**1. Access the 3D Simulation UI:**
+Navigate to [**https://adrie-api.onrender.com/simulation**](https://adrie-api.onrender.com/simulation) (or your Render deployment URL).
 
+**2. Start a Simulation:**
+Click the "Initiate New Simulation" button. This will call the `/simulate` endpoint and generate a new mission with a 3D environment, hazards, and victims.
+
+**3. Generate a Rescue Plan:**
+Once the simulation is ready, click "Generate Rescue Plan". This will call the `/plan` endpoint, and you will see the planned paths for the agents visualized in the 3D scene.
 
 ---
 
-⚡ Quick Start
+### 🛠️ Technical Architecture & Local Setup
 
-git clone https://github.com/psycho-prince/adrie.git
-cd adrie
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
+ADRIE is built on a modern, robust Python backend with a clean, modular architecture.
 
-Open:
+*   **Backend**: FastAPI, Pydantic, Gunicorn
+*   **Frontend (Simulation)**: Three.js, HTML, CSS, JavaScript
+*   **Core Logic**: Multi-agent planning, A* search, risk modeling, and configurable prioritization services.
 
-👉 http://127.0.0.1:8000/docs
-
-
----
-
-💻 Running Locally (All OS)
-
-🐧 Linux
-
-sudo apt install python3 python3-venv
-git clone https://github.com/psycho-prince/adrie.git
-cd adrie
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
-
-
----
-
-🍎 macOS
-
-brew install python
-git clone https://github.com/psycho-prince/adrie.git
-cd adrie
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
-
+**Running Locally:**
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/psycho-prince/adrie.git
+    cd adrie
+    ```
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Run the application:**
+    ```bash
+    gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --reload
+    ```
+5.  **Access the API and Simulation:**
+    *   **API Docs (Swagger UI):** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+    *   **3D Simulation:** [http://127.0.0.1:8000/simulation](http://127.0.0.1:8000/simulation)
 
 ---
 
-🪟 Windows (PowerShell)
+### ☁️ Production & Deployment (Render)
 
-git clone https://github.com/psycho-prince/adrie.git
-cd adrie
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
+ADRIE is configured for seamless deployment on Render.
 
-
----
-
-📱 Running in Termux (Android)
-
-pkg update
-pkg upgrade
-pkg install python git clang
-
-git clone https://github.com/psycho-prince/adrie.git
-cd adrie
-
-python -m venv venv
-source venv/bin/activate
-
-pip install -r requirements.txt
-
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-
-Access:
-
-http://127.0.0.1:8000/docs
-
+*   **Repository**: Your GitHub fork
+*   **Root Directory**: (leave empty)
+*   **Build Command**: `pip install -r requirements.txt`
+*   **Start Command**: `gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT`
+*   **Health Check Path**: `/health`
 
 ---
 
-🐳 Running with Docker (Optional)
-
-Build image
-
-docker build -t adrie .
-
-Run container
-
-docker run -p 8000:8000 adrie
-
-
----
-
-🧪 Running Tests
-
-pytest
-
-With coverage:
-
-pytest --cov=adrie
-
-
----
-
-🔌 API Usage
-
-Start simulation
-
-curl -X POST http://localhost:8000/simulate
-
-Generate plan
-
-curl -X POST http://localhost:8000/plan/{mission_id}
-
-Get metrics
-
-curl http://localhost:8000/metrics/{mission_id}
-
-Explain decision
-
-curl http://localhost:8000/explain/{mission_id}/mission_summary
-
-
----
-
-☁️ Deploying to Render
-
-1️⃣ Push repo to GitHub
-
-2️⃣ Create Web Service on Render
-
-Build Command
-
-pip install -r requirements.txt
-
-Start Command
-
-python -m uvicorn main:app --host 0.0.0.0 --port $PORT
-
-Health Check
-
-/health
-
-
----
-
-3️⃣ Deploy
-
-After deploy:
-
-👉 https://your-app.onrender.com/docs
-
-
----
-
-🧰 Troubleshooting
-
-❌ ModuleNotFoundError: adrie
-
-Run using:
-
-python -m uvicorn main:app
-
-
----
-
-❌ Port already in use
-
-kill -9 <PID>
-
-
----
-
-❌ Dependencies fail
-
-pip install --upgrade pip
-pip install -r requirements.txt
-
-
----
-
-🧠 Performance Tips
-
-Use Python 3.11+
-
-Run without --reload in production
-
-Enable async workers for scale
-
-
-
----
-
-🤝 Contributing
-
-1. Fork repo
-
-
-2. Create feature branch
-
-
-3. Submit PR
-
-
-
-
----
-
-📜 License
-
-MIT License
-
-
----
-
-🚀 Status
-
-ADRIE is demo-ready and deployable as an AI decision-intelligence platform for disaster response simulations.
-
-
----
+### 🗺️ Future Roadmap
+
+*   **Enhanced Simulation**: Integrate a more advanced physics engine and more realistic agent models.
+*   **Reinforcement Learning**: Use RL to train agents for even more complex and adaptive behaviors.
+*   **Hardware Integration**: Develop connectors for popular robotics platforms (e.g., ROS, DJI drones).
+*   **Cloud-Native Scaling**: Deploy on Kubernetes for high-availability, large-scale simulations.
