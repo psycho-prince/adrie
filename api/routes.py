@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
 from uuid import UUID
 
@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from adrie.api.dependencies import (
     get_thread_pool_executor,
-)  # Import dependency for executor
+    get_mission_registry,
+)
 from adrie.core.config import settings
 from adrie.core.exceptions import (
     ExplanationNotImplementedException,
@@ -16,9 +17,11 @@ from adrie.core.exceptions import (
     MissionNotFoundException,
     PlanningException,
     ServiceInitializationException,
+    VictimNotFoundException, # New import
+    AgentNotFoundException, # New import
 )
 from adrie.core.logger import get_logger
-from adrie.infrastructure.mission_registry import mission_registry
+from adrie.infrastructure.mission_registry import MissionRegistry
 from adrie.models.models import (
     ExplainabilityOutput,
     ExplanationType,
@@ -45,65 +48,111 @@ logger = get_logger(__name__)
 
 async def get_mission_service(
     executor: ThreadPoolExecutor = Depends(get_thread_pool_executor),
+    registry: MissionRegistry = Depends(get_mission_registry),
 ) -> MissionService:
     """Provide a MissionService instance."""
-    return MissionService(executor=executor)
+
+    return MissionService(executor=executor, mission_registry=registry)
 
 
-async def get_environment_service(mission_id: UUID) -> EnvironmentService:
+async def get_environment_service(
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry),
+) -> EnvironmentService:
     """Provide a mission-specific EnvironmentService instance."""
     try:
-        return await mission_registry.get_environment_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        return await registry.get_environment_service(mission_id)
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
-async def get_risk_service(mission_id: UUID) -> RiskService:
+async def get_risk_service(
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry),
+) -> RiskService:
     """Provide a mission-specific RiskService instance."""
     try:
-        return await mission_registry.get_risk_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        return await registry.get_risk_service(mission_id)
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
-async def get_agent_service(mission_id: UUID) -> AgentService:
+async def get_agent_service(
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry),
+) -> AgentService:
     """Provide a mission-specific AgentService instance."""
     try:
-        return await mission_registry.get_agent_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        return await registry.get_agent_service(mission_id)
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
-async def get_planner_service(mission_id: UUID) -> PlannerService:
+async def get_planner_service(
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry),
+) -> PlannerService:
     """Provide a mission-specific PlannerService instance."""
     try:
-        return await mission_registry.get_planner_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        return await registry.get_planner_service(mission_id)
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
-async def get_prioritization_service(mission_id: UUID) -> PrioritizationService:
+async def get_prioritization_service(
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry),
+) -> PrioritizationService:
     """Provide a mission-specific PrioritizationService instance."""
     try:
-        return await mission_registry.get_prioritization_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        return await registry.get_prioritization_service(mission_id)
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
-async def get_explainability_service(mission_id: UUID) -> ExplainabilityService:
+async def get_explainability_service(
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry), # Inject MissionRegistry
+) -> ExplainabilityService:
     """Provide a mission-specific ExplainabilityService instance."""
     try:
-        return await mission_registry.get_explainability_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        # Note: ExplainabilityService does not take mission_id in its constructor,
+        # but it uses the registry to retrieve mission-specific data within its methods.
+        return ExplainabilityService(mission_registry=registry) # Pass registry to constructor
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
-async def get_metrics_service(mission_id: UUID) -> MetricsService:
+async def get_metrics_service_dependency( # Renamed this function
+    mission_id: UUID,
+    registry: MissionRegistry = Depends(get_mission_registry), # Inject MissionRegistry
+) -> MetricsService:
     """Provide a mission-specific MetricsService instance."""
     try:
-        return await mission_registry.get_metrics_service(mission_id)
-    except MissionNotFoundException:
-        raise MissionNotFoundException(mission_id)
+        return await registry.get_metrics_service(mission_id) # Use injected registry
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
 
 
 # --- API Endpoints ---
@@ -164,8 +213,11 @@ async def plan(
     """
     try:
         return await mission_service.generate_mission_plan(mission_id, request)
-    except MissionNotFoundException as e:
-        raise e
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
     except (
         HTTPException
     ):  # Re-raise FastAPI HTTP exceptions (e.g., from mission status check)
@@ -186,18 +238,23 @@ async def plan(
     summary="Retrieve performance metrics and KPIs for a specific mission.",
 )
 async def get_mission_metrics(
-    mission_id: UUID, metrics_service: MetricsService = Depends(get_metrics_service)
+    mission_id: UUID,
+    metrics_service: MetricsService = Depends(get_metrics_service_dependency), # Use renamed dependency
+    registry: MissionRegistry = Depends(get_mission_registry), # Inject MissionRegistry
 ) -> MetricsSummary:
     """Retrieve the latest performance metrics
     and business KPIs for the specified mission.
     """
     try:
-        mission = await mission_registry.get_mission(mission_id)
+        mission = await registry.get_mission(mission_id) # Use injected registry
         metrics_summary = await metrics_service.get_metrics_summary(mission)
         logger.info(f"Retrieved metrics for mission {mission_id}.")
         return metrics_summary
-    except MissionNotFoundException as e:
-        raise e
+    except MissionNotFoundException as e: # Use e.entity_id here
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
     except MetricsCalculationException as e:
         raise e
     except Exception as e:
@@ -233,11 +290,22 @@ async def get_explanation(
         return await explainability_service.get_explanation_output(
             mission_id, explanation_type, decision_id
         )
-    except (
-        MissionNotFoundException,
-        ExplanationNotImplementedException,
-        HTTPException,
-    ) as e:
+    except VictimNotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Victim with ID {e.entity_id} not found."
+        )
+    except AgentNotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agent with ID {e.entity_id} not found."
+        )
+    except MissionNotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mission with ID {e.entity_id} not found."
+        )
+    except ExplanationNotImplementedException as e:
         raise e
     except InvalidExplanationRequestException as e:
         raise e

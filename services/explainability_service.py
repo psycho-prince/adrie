@@ -1,4 +1,4 @@
-import datetime  # Moved from _get_current_timestamp
+import datetime
 import json
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
@@ -6,9 +6,12 @@ from uuid import UUID, uuid4
 from adrie.core.exceptions import (
     InvalidExplanationRequestException,
     MissionNotFoundException,
+    ServiceInitializationException,
+    VictimNotFoundException, # New import
+    AgentNotFoundException, # New import
 )
 from adrie.explainability.llm_interface import LLMInterface, MockLLM
-
+from adrie.infrastructure.mission_registry import MissionRegistry # Import the class
 from adrie.models.models import (
     Agent,
     Coordinate,
@@ -22,18 +25,19 @@ from adrie.models.models import (
 
 class ExplainabilityService:
     """The Explainability Service integrates with LLMs.
-    
+
     Generates human-readable and structured explanations for various ADRIE decisions.
     """
-    def __init__(self, llm_interface: Optional[LLMInterface] = None):
+    def __init__(self, llm_interface: Optional[LLMInterface] = None, mission_registry: Optional[MissionRegistry] = None):
         """Initialize the ExplainabilityService.
 
         Args:
             llm_interface (Optional[LLMInterface]): An instance of an LLM interface.
                                                     Defaults to MockLLM if not provided.
-
+            mission_registry (Optional[MissionRegistry]): An instance of the MissionRegistry.
         """
         self.llm = llm_interface if llm_interface else MockLLM()
+        self.mission_registry = mission_registry
 
     async def generate_victim_prioritization_explanation(
         self,
@@ -191,8 +195,6 @@ class ExplainabilityService:
         decision_context: Dict[str, Any],
     ) -> str:
         """Create a detailed prompt for victim prioritization."""
-        # This prompt would be much more detailed in a real system,
-        # including all relevant factors from the victim and environment.
         return (
             f"Explain why Victim ID {victim.id} at {victim.location.x},{victim.location.y} "
             f"was prioritized. Its injury severity is {victim.injury_severity}, "
@@ -265,14 +267,21 @@ class ExplainabilityService:
         explanation_type: ExplanationType,
         decision_id: Optional[UUID] = None,
     ) -> ExplainabilityOutput:
-        from adrie.infrastructure.mission_registry import mission_registry
+
+        # Use self.mission_registry instead of importing a global one
+        if not self.mission_registry:
+            raise ServiceInitializationException(
+                service_name="ExplainabilityService",
+                detail="MissionRegistry not initialized for ExplainabilityService."
+            )
 
         """Provides an explanation for critical decisions or a summary for a mission.
         - `explanation_type`: Type of explanation requested (e.g., VICTIM_PRIORITIZATION, ROUTE_SELECTION, MISSION_SUMMARY, TRADE_OFF_ANALYSIS).
         - `decision_id`: Optional ID of a specific decision to explain (e.g., victim ID for prioritization).
         """
-        mission = await mission_registry.get_mission(mission_id)
-        env_service = await mission_registry.get_environment_service(mission_id)
+
+        mission = await self.mission_registry.get_mission(mission_id)
+        env_service = await self.mission_registry.get_environment_service(mission_id)
 
         # Placeholder for building decision context based on explanation_type
         decision_context: Dict[str, Any] = {}
@@ -286,7 +295,7 @@ class ExplainabilityService:
 
             victim = env_service.victims.get(decision_id)
             if not victim:
-                raise MissionNotFoundException(decision_id)  # Raising custom exception
+                raise VictimNotFoundException(decision_id)  # Changed exception
 
             # Example context, would be richer with actual decision logic
             decision_context = {
@@ -301,20 +310,21 @@ class ExplainabilityService:
                 mission, victim, env_service.get_all_victims(), decision_context
             )
         elif explanation_type == ExplanationType.MISSION_SUMMARY:
-            mission_data = await mission_registry.get_mission_data(mission_id)
+            mission_data = await self.mission_registry.get_mission_data(mission_id)
             current_plan = mission_data.get("current_plan")
             if not current_plan:
                 raise MissionNotFoundException(
                     mission_id
                 )  # Consider a more specific exception like PlanNotFoundException
-            metrics_summary = await mission_data["metrics_service"].get_metrics_summary(
+            metrics_service = await self.mission_registry.get_metrics_service(mission_id)
+            metrics_summary = await metrics_service.get_metrics_summary(
                 mission
             )
             # key_decisions would be pulled from a log of decisions
             explanation_output = await self.generate_mission_summary(
                 mission,
                 current_plan,
-                metrics_summary.model_dump(mode="json"), # Changed to model_dump(mode="json")
+                metrics_summary.model_dump(mode="json"),
                 [],  # Empty list for key_decisions for now
             )
         elif explanation_type == ExplanationType.ROUTE_SELECTION:
@@ -323,7 +333,7 @@ class ExplainabilityService:
                     detail="decision_id (agent ID or plan ID) is required for route selection explanation."
                 )
 
-            mission_data = await mission_registry.get_mission_data(mission_id)
+            mission_data = await self.mission_registry.get_mission_data(mission_id)
             agent_service = mission_data["agent_service"]
             current_plan = mission_data.get("current_plan")
 
@@ -344,10 +354,9 @@ class ExplainabilityService:
 
             agent_obj = agent_service.get_agent(decision_id)
             if not agent_obj:
-                raise MissionNotFoundException(
+                raise AgentNotFoundException( # Changed exception
                     decision_id
-                )  # Consider AgentNotFoundException
-
+                )
             # For simplicity, explain the first task's path
             first_task = agent_plan.tasks[0]
             plan_segment = (
@@ -369,10 +378,7 @@ class ExplainabilityService:
                 mission, agent_obj, plan_segment, reasoning_context
             )
         elif explanation_type == ExplanationType.TRADE_OFF_ANALYSIS:
-            # For TRADE_OFF_ANALYSIS, decision_id might be optional or point to a specific trade-off record.
-            # For now, we'll generate a generic one or require it to be passed via API.
             if not decision_id:
-                # Example: Assume decision_id could be a victim ID or mission ID if a specific trade-off applies
                 trade_off_context = {
                     "situation": "Prioritizing high-risk, low-severity victim over low-risk, high-severity victim.",
                     "options_considered": [

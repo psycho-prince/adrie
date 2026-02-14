@@ -26,8 +26,8 @@ class Coordinate(BaseModel):
     """Represents a 2D coordinate in the disaster grid."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
-    x: int = Field(..., description="X-coordinate on the grid.")
-    y: int = Field(..., description="Y-coordinate on the grid.")
+    x: NonNegativeInt = Field(..., description="X-coordinate on the grid.")
+    y: NonNegativeInt = Field(..., description="Y-coordinate on the grid.")
 
     def __lt__(self, other: "Coordinate") -> bool:
         if self.x < other.x:

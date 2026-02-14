@@ -11,7 +11,7 @@ from adrie.api.health import router as health_router
 from adrie.api.routes import router as api_router
 from adrie.core.config import settings
 from adrie.core.logger import get_logger
-from adrie.infrastructure.mission_registry import mission_registry
+from adrie.infrastructure.mission_registry import MissionRegistry # Import the class
 from adrie.middleware.logging_middleware import LoggingMiddleware
 from adrie.middleware.rate_limiting_middleware import (
     RateLimitingMiddleware,
@@ -35,22 +35,34 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.executor = ThreadPoolExecutor(max_workers=settings.MAX_WORKERS)
     logger.info(f"Initialized ThreadPoolExecutor with {settings.MAX_WORKERS} workers.")
 
+    # Initialize MissionRegistry and attach to app state
+    app.state.mission_registry = MissionRegistry()
+    logger.info(f"Initialized MissionRegistry with ID: {id(app.state.mission_registry)}")
+
+
     yield
     logger.info("Shutting down ADRIE.")
     await lifespan_executor_shutdown_handler(app)  # Use the imported shutdown handler
-    await mission_registry.clear()
+    if hasattr(app.state, "mission_registry"):
+        await app.state.mission_registry.clear() # Clear the mission_registry on shutdown
 
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    description="Autonomous Disaster Response Intelligence Engine API",
-    lifespan=lifespan,
-)
+def create_app() -> FastAPI:
+    """Factory function to create and configure a FastAPI application instance."""
+    _app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description="Autonomous Disaster Response Intelligence Engine API",
+        lifespan=lifespan,
+    )
 
-app.include_router(api_router)
-app.include_router(health_router)
+    _app.include_router(api_router)
+    _app.include_router(health_router)
 
-app.add_middleware(RequestIdMiddleware)
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(RateLimitingMiddleware)  # Add RateLimitingMiddleware
+    _app.add_middleware(RequestIdMiddleware)
+    _app.add_middleware(LoggingMiddleware)
+    _app.add_middleware(RateLimitingMiddleware)  # Add RateLimitingMiddleware
+
+    return _app
+
+app = create_app() # The global app instance, if still desired for non-test runs

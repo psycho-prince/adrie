@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -7,21 +7,44 @@ from fastapi import HTTPException, status
 class ADRIEException(HTTPException):
     """Base custom exception for the ADRIE application."""
 
-    def __init__(self, status_code: int, detail: Any):
+    def __init__(self, status_code: int, detail: Any, entity_id: Optional[UUID] = None):
         """Initialize the ADRIEException."""
         super().__init__(status_code=status_code, detail=detail)
+        self.entity_id = entity_id # Store entity_id
 
 
 class MissionNotFoundException(ADRIEException):
     """Raised when a specified mission ID is not found."""
 
-    def __init__(self, mission_id: UUID):
+    def __init__(self, entity_id: UUID): # Changed from mission_id to entity_id for consistency
         """Initialize the MissionNotFoundException."""
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Mission with ID {mission_id} not found.",
+            detail=f"Mission with ID {entity_id} not found.",
+            entity_id=entity_id # Pass entity_id to base class
         )
 
+class VictimNotFoundException(ADRIEException):
+    """Raised when a specified victim ID is not found."""
+
+    def __init__(self, entity_id: UUID):
+        """Initialize the VictimNotFoundException."""
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Victim with ID {entity_id} not found.",
+            entity_id=entity_id # Pass entity_id to base class
+        )
+
+class AgentNotFoundException(ADRIEException):
+    """Raised when a specified agent ID is not found."""
+
+    def __init__(self, entity_id: UUID):
+        """Initialize the AgentNotFoundException."""
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agent with ID {entity_id} not found.",
+            entity_id=entity_id # Pass entity_id to base class
+        )
 
 class MissionConflictException(ADRIEException):
     """Raised when an attempt is made to create a mission with an existing ID."""
@@ -34,6 +57,7 @@ class MissionConflictException(ADRIEException):
                 f"Mission with ID {mission_id} already exists. "
                 "Please choose a different ID or reset."
             ),
+            entity_id=mission_id # Pass mission_id to base class
         )
 
 

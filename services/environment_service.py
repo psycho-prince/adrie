@@ -290,15 +290,16 @@ class EnvironmentService:
 
         """
         neighbors: List[Coordinate] = []
-        possible_moves = [
-            Coordinate(x=coord.x + 1, y=coord.y),
-            Coordinate(x=coord.x - 1, y=coord.y),
-            Coordinate(x=coord.x, y=coord.y + 1),
-            Coordinate(x=coord.x, y=coord.y - 1),
+        possible_moves_coords = [
+            (coord.x + 1, coord.y),
+            (coord.x - 1, coord.y),
+            (coord.x, coord.y + 1),
+            (coord.x, coord.y - 1),
         ]
 
-        for move in possible_moves:
-            if 0 <= move.x < self.grid_size and 0 <= move.y < self.grid_size:
+        for move_x, move_y in possible_moves_coords:
+            if 0 <= move_x < self.grid_size and 0 <= move_y < self.grid_size:
+                move = Coordinate(x=move_x, y=move_y)
                 node = self.grid.get(move)
                 if node and node.is_passable:
                     neighbors.append(move)

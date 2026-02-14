@@ -4,7 +4,9 @@ Configuration and fixtures for pytest.
 
 import pytest
 from httpx import AsyncClient
-from adrie.main import app as fastapi_app
+from adrie.main import create_app # Import the factory function
+from adrie.api.dependencies import get_mission_registry # This import should now succeed
+from adrie.infrastructure.mission_registry import MissionRegistry
 from adrie.services.environment_service import EnvironmentService
 from adrie.services.risk_service import RiskService
 from adrie.services.agent_service import AgentService
@@ -14,17 +16,39 @@ from adrie.services.explainability_service import ExplainabilityService
 from adrie.services.metrics_service import MetricsService
 from adrie.services.mission_service import MissionService
 from adrie.services.metrics_service import MetricsService
-from adrie.infrastructure.mission_registry import mission_registry
 from uuid import uuid4, UUID
 from typing import Generator, AsyncGenerator, Tuple
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
+@pytest.fixture
+async def clear_mission_registry() -> AsyncGenerator[MissionRegistry, None]:
+    """Provides a fresh MissionRegistry instance for each test and clears it afterwards."""
+
+    test_registry = MissionRegistry() # Create a new instance
+    await test_registry.clear() # Ensure it's empty to start
+    yield test_registry # Provide this instance to dependent fixtures
+
+    await test_registry.clear() # Clear it after the test
+
+@pytest.fixture
+def mock_get_mission_registry(clear_mission_registry: MissionRegistry):
+    """Overrides the get_mission_registry dependency to use the test fixture."""
+    # This fixture now correctly receives the yielded MissionRegistry instance
+
+    return clear_mission_registry
+
 @pytest.fixture(name="test_app")
-async def test_app_fixture() -> AsyncGenerator[AsyncClient, None]:
-    """Fixture for FastAPI TestClient."""
-    async with AsyncClient(app=fastapi_app, base_url="http://test") as client:
-        yield client
+async def test_app_fixture(mock_get_mission_registry: MissionRegistry) -> AsyncGenerator[AsyncClient, None]:
+    """Fixture for FastAPI TestClient, managing application lifespan and dependency overrides."""
+    app_instance = create_app() # Get a fresh app instance
+    # Override the dependency for get_mission_registry
+    app_instance.dependency_overrides[get_mission_registry] = lambda: mock_get_mission_registry
+    async with app_instance.router.lifespan_context(app_instance): # Use the new app instance
+        async with AsyncClient(app=app_instance, base_url="http://test") as client:
+            yield client
+    # Clear the overrides after the test is done
+    app_instance.dependency_overrides.clear()
 
 @pytest.fixture(name="executor_fixture")
 def executor_fixture() -> Generator[ThreadPoolExecutor, None, None]:
@@ -33,12 +57,12 @@ def executor_fixture() -> Generator[ThreadPoolExecutor, None, None]:
     yield executor
     executor.shutdown(wait=True)
 
-@pytest.fixture(autouse=True)
-async def clear_mission_registry() -> AsyncGenerator[None, None]:
-    """Clears mission_registry before and after each test to ensure isolation."""
-    await mission_registry.clear()
-    yield
-    await mission_registry.clear()
+# @pytest.fixture(autouse=False) # This fixture is now replaced by clear_mission_registry yielding the instance
+# async def clear_mission_registry() -> AsyncGenerator[None, None]:
+#     """Clears mission_registry before and after each test to ensure isolation."""
+#     await mission_registry.clear()
+#     yield
+#     await mission_registry.clear()
 
 @pytest.fixture(name="mock_mission_id")
 def mock_mission_id_fixture() -> UUID:
@@ -81,8 +105,11 @@ def metrics_engine_fixture(mock_mission_id: UUID) -> MetricsService:
     return MetricsService(mission_id=mock_mission_id)
 
 @pytest.fixture(name="mission_service")
-def mission_service_fixture(executor_fixture: ThreadPoolExecutor) -> MissionService:
-    """Fixture for a fresh MissionService instance with injected executor."""
-    return MissionService(executor=executor_fixture)
+def mission_service_fixture(
+    executor_fixture: ThreadPoolExecutor,
+    mock_get_mission_registry: MissionRegistry # Accept the mock registry
+) -> MissionService:
+    """Fixture for a fresh MissionService instance with injected executor and registry."""
+    return MissionService(executor=executor_fixture, mission_registry=mock_get_mission_registry)
 
 # Add fixtures for other components as they are developed
