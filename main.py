@@ -4,19 +4,19 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 
-from adrie.api.dependencies import (
+from api.dependencies import (
     lifespan_executor_shutdown_handler,
 )  # Import the shutdown handler
-from adrie.api.health import router as health_router
-from adrie.api.routes import router as api_router
-from adrie.core.config import settings
-from adrie.core.logger import get_logger
-from adrie.infrastructure.mission_registry import MissionRegistry # Import the class
-from adrie.middleware.logging_middleware import LoggingMiddleware
-from adrie.middleware.rate_limiting_middleware import (
+from api.health import router as health_router
+from api.routes import router as api_router
+from core.config import settings
+from core.logger import get_logger
+from infrastructure.mission_registry import MissionRegistry # Import the class
+from middleware.logging_middleware import LoggingMiddleware
+from middleware.rate_limiting_middleware import (
     RateLimitingMiddleware,
 )  # Import RateLimitingMiddleware
-from adrie.middleware.request_id import RequestIdMiddleware
+from middleware.request_id import RequestIdMiddleware
 
 logger = get_logger(__name__)
 
