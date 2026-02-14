@@ -344,12 +344,3 @@ ADRIE is demo-ready and deployable as an AI decision-intelligence platform for d
 
 
 ---
-
-If you want, I can next:
-
-✅ Write a short hackathon version README
-✅ Create a submission description
-✅ Generate a demo script
-✅ Add a Dockerfile
-
-Just tell me 👍
