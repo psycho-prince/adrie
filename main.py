@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from api.dependencies import (
     lifespan_executor_shutdown_handler,
@@ -58,6 +59,9 @@ def create_app() -> FastAPI:
 
     _app.include_router(api_router)
     _app.include_router(health_router)
+
+    _app.mount("/ui", StaticFiles(directory="ui"), name="ui")
+
 
     _app.add_middleware(RequestIdMiddleware)
     _app.add_middleware(LoggingMiddleware)

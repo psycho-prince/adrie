@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADRIE - 3D Mission Simulation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="simulation-container"></div>
+    <div id="ui-container">
+        <h1>ADRIE Mission Control</h1>
+        <div id="mission-info">
+            <h2>Mission Status</h2>
+            <p><strong>Mission ID:</strong> <span id="mission-id">N/A</span></p>
+            <p><strong>Status:</strong> <span id="mission-status">Idle</span></p>
+        </div>
+        <div id="kpi-dashboard">
+            <h2>Live KPIs</h2>
+            <div class="kpi">
+                <p>Victims Rescued:</p>
+                <p><span id="victims-rescued">0</span> / <span id="total-victims">0</span></p>
+            </div>
+            <div class="kpi">
+                <p>Avg. Risk Exposure:</p>
+                <p><span id="avg-risk">0.00</span></p>
+            </div>
+            <div class="kpi">
+                <p>Time to Rescue:</p>
+                <p><span id="rescue-time">0s</span></p>
+            </div>
+        </div>
+        <div id="controls">
+            <button id="start-sim-btn">Initiate New Simulation</button>
+            <button id="generate-plan-btn" disabled>Generate Rescue Plan</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="main.js" type="module"></script>
+</body>
+</html>

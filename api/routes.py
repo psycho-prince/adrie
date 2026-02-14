@@ -3,6 +3,7 @@ from typing import Dict, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 
 from api.dependencies import (
     get_thread_pool_executor,
@@ -157,6 +158,10 @@ async def get_metrics_service_dependency( # Renamed this function
 
 # --- API Endpoints ---
 
+@router.get("/simulation", response_class=FileResponse)
+async def get_simulation_ui():
+    """Serves the 3D simulation UI."""
+    return "ui/simulation/index.html"
 
 @router.get("/", summary="Root endpoint for ADRIE API")
 async def root() -> Dict[str, str]:
