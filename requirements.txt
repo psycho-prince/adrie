@@ -6,3 +6,8 @@ pydantic
 
 loguru
 python-dotenv
+# Scaling Dependencies
+redis
+celery
+sqlalchemy
+psycopg2-binary
