@@ -5,9 +5,11 @@ services:
     build: .
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=postgresql://adrie_user:adrie_pass@db:5432/adrie_db
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-adrie_user}:${POSTGRES_PASSWORD:-default_dev_pass}@db:5432/${POSTGRES_DB:-adrie_db}
     depends_on:
       - redis
       - db
@@ -21,23 +23,27 @@ services:
 
   db:
     image: postgres:15-alpine
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=adrie_user
-      - POSTGRES_PASSWORD=adrie_pass
-      - POSTGRES_DB=adrie_db
+      - POSTGRES_USER=${POSTGRES_USER:-adrie_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-default_dev_pass}
+      - POSTGRES_DB=${POSTGRES_DB:-adrie_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
 
-  # Placeholder for the Celery Worker (uncomment once task queues are implemented in the code)
+  # Placeholder for the Celery Worker
   # worker:
   #   build: .
   #   command: celery -A core.worker.celery_app worker --loglevel=info
+  #   env_file:
+  #     - .env
   #   environment:
-  #     - REDIS_URL=redis://redis:6379/0
-  #     - DATABASE_URL=postgresql://adrie_user:adrie_pass@db:5432/adrie_db
+  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+  #     - DATABASE_URL=postgresql://${POSTGRES_USER:-adrie_user}:${POSTGRES_PASSWORD:-default_dev_pass}@db:5432/${POSTGRES_DB:-adrie_db}
   #   depends_on:
   #     - redis
   #     - db
