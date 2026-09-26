@@ -11,3 +11,4 @@ redis
 celery
 sqlalchemy
 psycopg2-binary
+pydantic-settings
