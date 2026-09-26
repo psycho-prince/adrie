@@ -1,3 +1,4 @@
+"""Utility functions for the ADRIE application."""
 import asyncio
 import concurrent.futures
 from typing import Any, Callable
